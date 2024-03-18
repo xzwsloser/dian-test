@@ -3,42 +3,52 @@
 #include "../include/frameQueue.h"
 #include <string.h>
 #include <unistd.h>
-const char* standard=" .-^*!+=&@#$h";           // 总共可以定义13个字符,前面12个每一个对应20,后面一个对应10个
-Buffer* buf=NULL;
+const char* standard=" -.`+=#*!^ca@";           // 总共可以定义13个字符,前面12个每一个对应20,后面一个对应10个
+Buffer* buf;  // 就是定义一个缓冲区
 int flag=0;  // 记录视频帧录入状态
+pthread_mutex_t mutex;  // 锁对象
+// 定义一个固定的灰度数组
+char* charBuffer[256];
+// 初始化函数
+void initBuffer(){
+    for(int i=0;i<256;i++){
+        char buf[100];
+        sprintf(buf,"\033[38;2;%d;%d;%dm%c\033[0m",i,i,i,standard[i/20]);
+        charBuffer[i]=buf;
+    }
+}
+// 初始化锁对象
+void mutexInit(){
+    pthread_mutex_init(&mutex,NULL);  // 对外提供接口,初始化线程锁对象
+}
 // 首先定义一个初始化函数
 void bufInit(){
-    if(buf==NULL){
-        // 初始化
-        buf=createBuffer();
-    }
-    else{
-        return ;
-    }
+    
+    buf=createBuffer();
 }
-// 视频帧写入到文件中
-void writeIntoTxt(Frame frame){
-    int w=frame.width;
-    int h=frame.height;
-    int l=frame.linesize;
-    FILE* file=fopen("./video.txt","a");
-    for(int y=0;y<h;y+=9){
-        for(int x=0;x<w;x+=4){
-            // 打印图像
-            int index=y*l+x*3;
-            unsigned int red=(int)frame.data[index];
-            unsigned int green=(int)frame.data[index+1];
-            unsigned int blue=(int)frame.data[index+2];
-            // 此时的打印方法就是可以利用ascii码值打印,每20个数字分为一组,每一组对饮不同的ascii码表中的字符
-            unsigned int gray=(int)((red*30+green*59+blue*11)/100);
-            char buf[200];
-            fprintf(file,"\033[38;2;%u;%u;%um%c\033[0m",gray,gray,gray,standard[gray/20]);
-        }
-            fprintf(file,"\n");
-    }
-        fprintf(file,"\033[2J\033[Hy");
-        fclose(file);
-}
+// // 视频帧写入到文件中
+// void writeIntoTxt(Frame frame){
+//     int w=frame.width;
+//     int h=frame.height;
+//     int l=frame.linesize;
+//     FILE* file=fopen("./video.txt","a");
+//     for(int y=0;y<h;y+=9){
+//         for(int x=0;x<w;x+=4){
+//             // 打印图像
+//             int index=y*l+x*3;
+//             unsigned int red=(int)frame.data[index];
+//             unsigned int green=(int)frame.data[index+1];
+//             unsigned int blue=(int)frame.data[index+2];
+//             // 此时的打印方法就是可以利用ascii码值打印,每20个数字分为一组,每一组对饮不同的ascii码表中的字符
+//             unsigned int gray=(int)((red*30+green*59+blue*11)/100);
+//             char buf[200];
+//             fprintf(file,"\033[38;2;%u;%u;%um%c\033[0m",gray,gray,gray,standard[gray/20]);
+//         }
+//             fprintf(file,"\n");
+//     }
+//         fprintf(file,"\033[2J\033[Hy");
+//         fclose(file);
+// }
 // 定义获取视频帧的函数
 void getFrameAndPrint(char* fileName,int size,int stride,int ifColor){
     // 首先初始化视频解码器
@@ -49,16 +59,16 @@ void getFrameAndPrint(char* fileName,int size,int stride,int ifColor){
     } else{
         // 首先获取视频帧
         Frame frame=decoder_get_frame();
-        for(int i=0;i<300;i++){
-            frame=decoder_get_frame();
-        }
+        // for(int i=0;i<300;i++){
+        //     frame=decoder_get_frame();
+        // }
         if(size>1&&stride>1){
             // 池化操作
             resizeByMax(&frame,size,stride);
         }
         if(ifColor==0){
-            // printGrayImage(frame);
-            writeIntoTxt(frame);
+             printGrayImage(frame);
+            
         }
         else if(ifColor==1){
             // 打印彩色图像
@@ -75,11 +85,13 @@ void printGrayImage(Frame frame){
     int w=frame.width;
     int h=frame.height;
     int l=frame.linesize;
-    // 循环打印
-  
+    // 循环打印->
+    
     for(int y=0;y<h;y+=9){
-        for(int x=0;x<w;x+=4){
-   
+       
+        for(int x=0;x<w;x+=6){
+           
+        
             // 打印图像
             int index=y*l+x*3;
             unsigned int red=(int)frame.data[index];
@@ -88,25 +100,19 @@ void printGrayImage(Frame frame){
             // 此时的打印方法就是可以利用ascii码值打印,每20个数字分为一组,每一组对饮不同的ascii码表中的字符
             unsigned int gray=(int)((red*30+green*59+blue*11)/100);
             // 如何利用gray计算区间 0 20 40 -> 0 1 2 
-   
-            int num=gray/20;
-            //char* buf="\033[38;2;0;0;0m%c\033[0m";
-            // char buffer[100];
-            // sprintf(buffer,"\033[38;2;%u;%u;%um%c\033[0m",gray,gray,gray,standard[num]);
-            // puts(buffer);
-            printf("\033[38;2;%u;%u;%um%c\033[0m",gray,gray,gray,standard[num]);
-   
+            printf("\033[38;2;%u;%u;%um%c\033[0m",gray,gray,gray,standard[gray/20]);
+            
+            
         }
         printf("\n");
     }
     // 设置帧率
-        usleep(500000); // 微妙级别的 1s=1000000us
+        usleep(100000); // 微妙级别的 1s=1000000us
    // system("clear");
-   /**
-    * 优化: 利用双缓冲法优化
-   */
-   printf("\033[2J\033[H");  // 利用转义字符清屏并且把光标移动到左上角
-   
+  
+   puts("\033[2J\033[H");  // 利用转义字符清屏并且把光标移动到左上角
+ 
+
     
 }
 // level1-1 打印rgb图像
@@ -227,104 +233,37 @@ void printInRow(char* fileName,int size,int stride,int ifColor){
                 resizeByMax(&frame, size,stride);
             } 
             // 首先可以把字符全部读取到文件中
-           // writeIntoTxt(frame);
+          
             //printVideoByTxt("./video.txt",get_fps());
             if(ifColor==0){
                 printGrayImage(frame);
+                // 开启线程读取
+                // 初始化锁
+              
+            
             } else if(ifColor==1){
                 printRGBImage(frame);
             }
-            for(int i=0;i<2;i++){
+            for(int i=0;i<5;i++){
                  frame=decoder_get_frame();
+                 if(frame.height==0&&frame.width==0){
+                    break;
+                 }
+
             }
                   
         }
+       
     }
     // 开始打印
-   printVideoByTxt("./video.txt",1);
+    
     decoder_close();
 
 }
-// 视频解码线程的任务,就是利用头插法把视频帧放在buffer中
-void* saveFrame(void* arg){
-   
-    Para* para=(Para*)arg;
-  
-    // 不断取出视频帧,加入到buf中,此时只用把这个看成一个任务就可以了
-    int status=decoder_init(para->fileName);
-   
-    if(status==-1){
-   
-        printf("视频解码器打开失败\n");
-        exit(1);
-    }
-    else{
-        // 开始执行逻辑
-    
-        Frame frame=decoder_get_frame();
-    
-        while(frame.height!=0&&frame.width!=0){
-    
-            if(para->size>1&&para->stride>1){
-    
-                resizeByMax(&frame,para->size,para->stride);
-   
-            }
-   
-            headInsert(buf,frame);
-    
-            frame=decoder_get_frame();
-   
-            // 进行resize操作
-
-        }
-    }
-        // 最后就可以把标志位置为1
-        flag=1;
-    // 放入完成销毁视频解码器
-        decoder_close();
-        return NULL;
-}
-// 图像处理线程,它的任务就是不断处理线程
-void* printImage(void* arg){
-    
-    int* ifColor=(int*)arg;
-    
-    // 就是不断从buf中取出元素
-    while(buf->next==NULL){
-   
-
-    }
-    while(buf->next!=NULL){
-   
-        // 不断从中取出线程
-        Frame frame=tailDelete(buf);
-   
-        if(*ifColor==0){
- 
-            // 打印灰度图
-            printGrayImage(frame);
-    
-        } else if(*ifColor==1){
-   
-            // 打印彩色图片
-            printRGBImage(frame);
-   
-        }
-       
-   
-        // 就可以进行等待
-        while(buf->next==NULL&&flag==0){
-               
-        }
-    
-    }
-    return NULL;
-}
 // 读取文件的形式打印动画
-void printVideoByTxt(char* fileName,double fps){
+void printVideoByTxt(){
     // 一个字符读取
-    FILE* file=fopen(fileName,"r+");
+    FILE* file=fopen("./video.txt","r+");
     rewind(file);
     if(file==NULL){
         printf("文件打开失败\n");
@@ -332,9 +271,73 @@ void printVideoByTxt(char* fileName,double fps){
     int ch;
     while((ch)=fgetc(file)!=EOF){
         if(ch=='y'){
-            usleep(1000000/fps);
+            usleep(1000000);
             continue;
         }
-        printf("%c",ch);
+        putchar(ch);
     }
 }
+// 视频解码线程
+void* fileDecord(void* arg){
+    Para* para=(Para*)arg;
+    // 初始化视频解码器
+    int status=decoder_init(para->fileName);
+    if(status==-1){
+        printf("视频解码器打开失败\n");
+        exit(1);
+    }
+    else{
+        // 开始把所有的视频存放到buffer中
+        Frame frame=decoder_get_frame();
+        while(frame.height!=0&&frame.width!=0){
+            // 插入元素
+            // 处理图像
+            if(para->size>=1&&para->stride>=1){
+                resizeByMax(&frame,para->size,para->stride);
+            }
+            headInsert(buf,frame);
+            // 连续跳两帧
+            for(int i=0;i<2;i++){
+                frame=decoder_get_frame();
+                if(frame.height==0&&frame.width==0){
+                    break;
+                }
+            }
+        }
+        // 插入完成
+        flag=1;
+        decoder_close();
+        // 线程退出函数
+        pthread_exit(NULL);
+    }
+}
+// 视频处理线程
+void* videoPrint(void* arg){
+    // 这个函数的参数就是一个结构体
+    // 这个线程的任务就是不断从buffer中取出元素完成打印
+    int* ifColor=(int*)arg;
+    while(!(buf->next==NULL&&flag==1)){
+       // 等待一下 
+        // 开始取出元素
+        // 上锁
+        pthread_mutex_lock(&mutex);
+        while(buf->next==NULL){};  
+        if(buf->next==NULL&&flag==1){
+            break;
+        }
+        Frame frame=tailDelete(buf);
+        if(frame.data==NULL){
+            continue;
+        }
+        if(*ifColor==0){
+            printGrayImage(frame);
+        }
+        else if(*ifColor==1){
+            printRGBImage(frame);
+        }
+        pthread_mutex_unlock(&mutex);
+    }
+    // 线程退出函数
+    pthread_exit(NULL);
+}
+

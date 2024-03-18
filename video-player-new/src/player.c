@@ -63,40 +63,48 @@ int main(int argc,char* argv[]){
                 i++;
             }
         }
-         else if(strcmp(str,"-a")==0||strcmp(str,"--action")==0){
-                 ifAction=1;
-                 i++;
-        }
+        //  else if(strcmp(str,"-a")==0||strcmp(str,"--action")==0){
+        //          ifAction=1;
+        //          i++;
+        // }
          else{
             printf("输出有误,请重新输入\n");
             exit(1);
         }
     
     }
-    // 参数的汇总
-    if(ifAction==1){
-        printInRow(fileName,rsize[0],rsize[1],ifColor);
-    } else if(ifAction==0){
-        getFrameAndPrint(fileName,rsize[0],rsize[1],ifColor);
-    }
-    // 线程的开启
-    // 打开读入视频帧的线程
-    //首先构造结构体
-    // Para* para=(Para*)malloc(sizeof(Para));
-    // para->fileName=fileName;
-    // para->size=rsize[0];
-    // para->stride=rsize[1];
-    // // 初始化缓存区
-    // bufInit();
-    // // 创建线程
-//    // pthread_t dealVideo;  //视频提取线程
-    // pthread_t printVideo; // 视频打印线程
-    // //pthread_create(&dealVideo,NULL,saveFrame,para);
-    // saveFrame(para);
-    // sleep(2);
-    // pthread_create(&printVideo,NULL,printImage,&ifColor);
+    // 初始化buf
+    bufInit();
+    // 初始化线程锁对象
+    mutexInit();
+ 
+    // 开启线程
+    pthread_t tid1;  // 视频解码线程
+    pthread_t tid2;
+   
+    // 参数的转化
+    Para* para=(Para*)malloc(sizeof(Para));
+    para->fileName=fileName;
+    para->size=rsize[0];
+    para->stride=rsize[1];
+    pthread_create(&tid1,NULL,fileDecord,para);
+   
+        pthread_create(&tid2,NULL,videoPrint,&ifColor);
+    
+    // 插入线程
+    pthread_join(tid1,NULL);
+   
+    pthread_join(tid2,NULL);
 
-    // // 线程退出函数
-    // pthread_exit(NULL);
+    
+  
+    // 参数的汇总
+    // if(ifAction==1){
+    //     printInRow(fileName,rsize[0],rsize[1],ifColor);
+    // } else if(ifAction==0){
+    //     getFrameAndPrint(fileName,rsize[0],rsize[1],ifColor);
+    // }
+    
+
     
 }

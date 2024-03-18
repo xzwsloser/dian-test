@@ -11,6 +11,8 @@ typedef struct parameters{
     int size;
     int stride;
 }Para;
+// 视频解码线程的参数
+
 // 定义获取视频帧的函数
 void getFrameAndPrint(char* fileName,int size,int stride,int ifColor);
 
@@ -28,13 +30,20 @@ void resizeByMax(Frame* frame,int size,int stride);
 // 完成连续打印
 void printInRow(char* fileName,int size,int stride,int ifColor);
 // 视频处理线程
-void* saveFrame(void* arg);
+
 // 打印线程
-void* printImage(void* arg);
+
 // 初始化
 void bufInit();
 // 写入文件
 void writeIntoTxt(Frame frame);
 // 读取打印视频
-void printVideoByTxt(char* fileName,double fps);
+void printVideoByTxt();
+// 视频解码线程
+void* fileDecord(void* arg);
+// 视频处理线程
+void* videoPrint(void* arg);
+// 初始化锁对象
+void mutexInit();
+
 #endif 

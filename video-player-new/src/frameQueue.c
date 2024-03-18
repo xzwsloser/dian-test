@@ -20,9 +20,14 @@ void headInsert(Buffer* buf,Frame frame){
 // 尾删法
 Frame tailDelete(Buffer* buf){
     // 首先找到尾节点
-    if(buf->next==NULL){
-        sleep(1);
-    }
+   if(buf->next==NULL){
+        Frame frame;
+        frame.data=NULL;
+        frame.height=0;
+        frame.linesize=0;
+        frame.width=0;
+        return frame;
+   }
     Buffer* prun=buf;
     while(prun->next->next!=NULL){
         prun=prun->next;
