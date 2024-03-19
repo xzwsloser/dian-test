@@ -27,13 +27,13 @@ int main(int argc,char* argv[]){
             // 提示帮助文档
            isHelp();
             
-            i++;
+            exit(0);
             break;
         } else if(strcmp(str,"-v")==0||strcmp(str,"--version")==0){
             // 版本号
           
            isVersion();
-            i++;
+           exit(0);
             break;
         } else if(strcmp(str,"-r")==0||strcmp(str,"--resize")==0){
             // 向后面遍历两个变量
@@ -79,7 +79,7 @@ int main(int argc,char* argv[]){
     bufInit();
     // 初始化线程锁对象
     mutexInit();
-    //initBuffer();
+    initBufferChar();
     // 开启线程
     pthread_t tid1;  // 视频解码线程
     pthread_t thread[100];

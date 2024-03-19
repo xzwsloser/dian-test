@@ -7,9 +7,18 @@ const char* standard=" -.`+=@*!^ca#";           // 总共可以定义13个字符
 Buffer* buf;  // 就是定义一个缓冲区
 int flag=0;  // 记录视频帧录入状态
 pthread_mutex_t mutex;  // 锁对象
+char* bufferChar[256];
 // 另外一个线程锁
 double fps=1.0;  // 视频帧率
 int ifStop=0;
+// 初始化灰度值数组的函数
+void initBufferChar(){
+    for(int i=0;i<256;i++){
+        char* buffer=(char*)malloc(sizeof(char)*30);
+        sprintf(buffer,"\033[38;2;%i;%i;%im%c\033[0m",i,i,i,standard[i/20]);
+        bufferChar[i]=buffer;
+    }
+}
 // 定义一个修改ifStop的接口
 int getifStop(){
     return ifStop;
@@ -95,7 +104,7 @@ void printGrayImage(Frame frame){
             // 此时的打印方法就是可以利用ascii码值打印,每20个数字分为一组,每一组对饮不同的ascii码表中的字符
             unsigned int gray=(int)((red*30+green*59+blue*11)/100);
             // 如何利用gray计算区间 0 20 40 -> 0 1 2 
-           printf("\033[38;2;%u;%u;%um%c\033[0m",gray,gray,gray,standard[gray/20]);
+          fputs(bufferChar[gray],stdout);
            
             
         }
@@ -303,7 +312,11 @@ void* videoPrint(void* arg){
         // 开始取出元素
         // 上锁
         pthread_mutex_lock(&mutex);
-        while(buf->next==NULL){};  
+        while(buf->next==NULL){
+            if(buf->next==NULL&&flag==1){
+                exit(0);
+            }
+        }  
         if(buf->next==NULL&&flag==1){
             break;
         }

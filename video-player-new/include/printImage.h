@@ -47,4 +47,5 @@ void setFps(double data);
 double getFps();
 void setifStop(int data);
 double getFps();
+void initBufferChar();
 #endif 
