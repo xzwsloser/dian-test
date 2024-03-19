@@ -32,6 +32,9 @@ void* kbhit()
 }  
 void* readChar(){
    while(1){
+     if(getIfEnd()==1){
+        pthread_exit(NULL);
+     }
      char ch=getchar();
     if(ch=='d'){
         // 加速

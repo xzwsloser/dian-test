@@ -3,15 +3,20 @@
 #include "../include/frameQueue.h"
 #include <string.h>
 #include <unistd.h>
-const char* standard=" -.`+=@*!^ca#";           // 总共可以定义13个字符,前面12个每一个对应20,后面一个对应10个
+const char* standard=" -.`+=@*!^ca@";           // 总共可以定义13个字符,前面12个每一个对应20,后面一个对应10个
+// " -.`+=@*!^ca#"
 Buffer* buf;  // 就是定义一个缓冲区
 int flag=0;  // 记录视频帧录入状态
 pthread_mutex_t mutex;  // 锁对象
+int ifEnd=0;
 char* bufferChar[256];
 // 另外一个线程锁
 double fps=1.0;  // 视频帧率
 int ifStop=0;
 // 初始化灰度值数组的函数
+int getIfEnd(){
+    return ifEnd;
+}
 void initBufferChar(){
     for(int i=0;i<256;i++){
         char* buffer=(char*)malloc(sizeof(char)*30);
@@ -345,6 +350,7 @@ void* videoPrint(void* arg){
         }
         pthread_mutex_unlock(&mutex);
     }
+    ifEnd=1;
     // 线程退出函数
     pthread_exit(NULL);
 }
