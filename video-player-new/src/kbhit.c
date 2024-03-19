@@ -37,6 +37,10 @@ void* readChar(){
         // 加速
         setFps(getFps()*1.2);
     }
+    else if(ch=='s'){
+        // 减速
+        setFps(getFps()*0.8);
+    }
     else if(ch==' '){
         // 暂停程序
         setifStop(1);
@@ -44,10 +48,11 @@ void* readChar(){
    
     else if(ch=='q'){
         printf("\033[2J\033[H");
-        exit(0); // 退出程序
+        break;
     }
     
    }
+        exit(0); // 退出程序
    pthread_exit(NULL);
    
 }

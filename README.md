@@ -2,13 +2,23 @@
 ## 总结
 还没有解决的问题:
 1. 视频帧率过快,rsize之后的视频帧大小过大还是会出现闪屏现象
-2. rsize调节的范围有限
+2. rsize调节的范围有限(一般可以取size和stride都为2效果最佳)
 其他的功能基本实现
+## 最后的一些改进
+1. 利用fputs函数替换了printf函数(自己测试过同样打印100000次,printf函数所用时间比fputs函数长9秒左右)
+2. 新增加了减速功能,按下s键即可减速
+3. 一开始时由于按下q键以后程序虽然退出但是这是利用终端输入命令时终端没有反应(由于利用pthread_join函数,子线程没有被回收依然在接受数据),改进的方法是把终止程序的指令exit放在线程退出函数之前并且不在循环中
 ## 运行方式
 ```bash
 cd output
 ./player -f ../video/bad_apple.mp4 -r 2 2 
 ```
+## 视频相关操作
+- d: 加速
+- s: 减速
+- 空格: 暂停
+- c : 启动
+- q: 退出程序
 ## Level 0-1
 之前就有学习过git,系统复习了一遍git中的常见指令
 ## Level 0-2
@@ -62,6 +72,7 @@ cd output
 ```
 ## Level 0-3
 安装相关的库,使用ubuntu中的apt或者centos中的yum即可,如果安装失败可以更新仓库 sudo apt updata
+由于之前学习过linux,所以常见的Linux命令会用
 ## Level 1-1
 使用到的ANSI值:
 1. 前景色: \033[38;red;green;bluem内容\033[0m
@@ -93,6 +104,7 @@ void printGrayImage(Frame frame){
             unsigned int gray=(int)((red*30+green*59+blue*11)/100);
             // 如何利用gray计算区间 0 20 40 -> 0 1 2 
             printf("\033[38;2;%u;%u;%um%c\033[0m",gray,gray,gray,standard[gray/20]);
+            // 这里的打印函数被替换成了fputs()
             
             
         }
@@ -157,13 +169,22 @@ void resizeByMax(Frame* frame,int size,int stride){
 ```
 ## Level 1-3
 1. 最先开始的做法就是利用循环不断打印图片,但是这样的效果非常差
-2. 调节帧率利用usleep函数每打印一张图片之后线程休眠一段事件
+2. 调节帧率利用usleep函数每打印一张图片之后线程休眠一段时间
 3. 利用上面的ASNI清屏
 ## Level 2-1
 1. 学习了C语言多线程的知识,学习了创建线程,插入线程,退出线程的语法
+   1. 定义线程pthread_t tid;
+   2. 创建线程 pthread_create(&tid,NULL,任务函数,参数(void*类型,相当于其他语言中的泛型))
+   3. 线程退出函数 pthread_exit(NULL)
+   4. 线程插入函数 pthread_join(tid)
+   5. 初始化锁 pthread_mutex_t mutex pthread_mutex_init(&mutex)
+   6. 上锁 pthread_lock(&mutex)
+   7. 开锁 pthread_unlock(&mutex)
 2. 了解了多个线程操作同一个全局变量时线程安全的问题,可以利用锁把操作共享变量所在的代码块锁起来
-3. 这里利用队列这种数据结果作为缓存,因为它的先进先出的特性保证了视频帧的顺序
-4. 可以利用结构体的方式传递参数
+   1. 但是一定要注意锁的位置
+   2. 不要出现锁的嵌套(死锁)
+3. 这里利用队列这种数据结果作为缓存,因为它的先进先出的特性保证了视频帧的顺序(这里听所还可以使用循环队列)
+4. 可以利用结构体的方式传递参数(传递线程的参数只可以传递一个)
 5. 代码演示(演示取出缓存和开启线程的代码):
 取出缓存:
 ```c
@@ -221,11 +242,11 @@ void* videoPrint(void* arg){
     pthread_join(tid2,NULL);
 ```
 ## Level 2-2
-可以每隔两帧取一帧进行打印
+可以每隔五帧取一帧进行打印,原来视频帧率一般都在30左右
 ## Level 3-1
 1. 实现视频的暂停,可以实现windows中的kbhit函数异步监听键盘事件(网上找到代码),另外自己写一个readChar函数不断把stdin中的字符读出来进行相应处理
 2. 利用多线程的方式,一条线程用于监听(就是kbhit函数),另外一个线程用于读取输入的字符并且进行相应的处理
-3. 通过操作全局变量实现暂停
+3. 通过操作全局变量实现暂停,这里暂停功能的实现就是利用getchar函数对打印线程进行阻塞
 ## Level 3-2
 实现方式和上面差不多   
 代码实现

@@ -74,18 +74,7 @@ void getFrameAndPrint(char* fileName,int size,int stride,int ifColor){
 
 // level1-1 首先打印灰度图像
 void printGrayImage(Frame frame){
-     if(ifStop==1){
-        char ch;
-        while(1){
-            // 阻塞等待
-            ch=getchar();
-            if(ch=='c'){
-                ifStop=0;
-                break;
-            }
-            
-        }
-    }
+
     int w=frame.width;
     int h=frame.height;
     int l=frame.linesize;
@@ -113,7 +102,18 @@ void printGrayImage(Frame frame){
     // 设置帧率
         usleep((int)(600000/fps)); // 微妙级别的 1s=1000000us
    // system("clear");
-  
+       if(ifStop==1){
+        char ch;
+        while(1){
+            // 阻塞等待
+            ch=getchar();
+            if(ch=='c'){
+                ifStop=0;
+                break;
+            }
+            
+        }
+    }
    puts("\033[2J\033[H");  // 利用转义字符清屏并且把光标移动到左上角
  
 
@@ -121,7 +121,7 @@ void printGrayImage(Frame frame){
 }
 // level1-1 打印rgb图像
 void printRGBImage(Frame frame){
-  
+   
     int w=frame.width;
     int h=frame.height;
     int l=frame.linesize;
@@ -135,6 +135,19 @@ void printRGBImage(Frame frame){
         }
         printf("\n");
     }    
+     usleep((int)(600000/fps)); // 微妙级别的 1s=1000000us
+       if(ifStop==1){
+        char ch;
+        while(1){
+            // 阻塞等待
+            ch=getchar();
+            if(ch=='c'){
+                ifStop=0;
+                break;
+            }
+            
+        }
+    }
     puts("\033[2J\033[H");
 }
 // level1-2 平均池化
