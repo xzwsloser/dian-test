@@ -35,10 +35,7 @@ void printInRow(char* fileName,int size,int stride,int ifColor);
 
 // 初始化
 void bufInit();
-// 写入文件
-void writeIntoTxt(Frame frame);
-// 读取打印视频
-void printVideoByTxt();
+
 // 视频解码线程
 void* fileDecord(void* arg);
 // 视频处理线程

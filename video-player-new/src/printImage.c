@@ -32,29 +32,7 @@ void bufInit(){
     
     buf=createBuffer();
 }
-// // 视频帧写入到文件中
-// void writeIntoTxt(Frame frame){
-//     int w=frame.width;
-//     int h=frame.height;
-//     int l=frame.linesize;
-//     FILE* file=fopen("./video.txt","a");
-//     for(int y=0;y<h;y+=9){
-//         for(int x=0;x<w;x+=4){
-//             // 打印图像
-//             int index=y*l+x*3;
-//             unsigned int red=(int)frame.data[index];
-//             unsigned int green=(int)frame.data[index+1];
-//             unsigned int blue=(int)frame.data[index+2];
-//             // 此时的打印方法就是可以利用ascii码值打印,每20个数字分为一组,每一组对饮不同的ascii码表中的字符
-//             unsigned int gray=(int)((red*30+green*59+blue*11)/100);
-//             char buf[200];
-//             fprintf(file,"\033[38;2;%u;%u;%um%c\033[0m",gray,gray,gray,standard[gray/20]);
-//         }
-//             fprintf(file,"\n");
-//     }
-//         fprintf(file,"\033[2J\033[Hy");
-//         fclose(file);
-// }
+
 // 定义获取视频帧的函数
 void getFrameAndPrint(char* fileName,int size,int stride,int ifColor){
     // 首先初始化视频解码器
@@ -280,22 +258,7 @@ void printInRow(char* fileName,int size,int stride,int ifColor){
 
 }
 // 读取文件的形式打印动画
-void printVideoByTxt(){
-    // 一个字符读取
-    FILE* file=fopen("./video.txt","r+");
-    rewind(file);
-    if(file==NULL){
-        printf("文件打开失败\n");
-    }
-    int ch;
-    while((ch)=fgetc(file)!=EOF){
-        if(ch=='y'){
-            usleep(1000000);
-            continue;
-        }
-        putchar(ch);
-    }
-}
+
 // 视频解码线程
 void* fileDecord(void* arg){
     Para* para=(Para*)arg;
@@ -316,7 +279,7 @@ void* fileDecord(void* arg){
             }
             headInsert(buf,frame);
             // 连续跳两帧
-            for(int i=0;i<3;i++){
+            for(int i=0;i<5;i++){
                 frame=decoder_get_frame();
                 if(frame.height==0&&frame.width==0){
                     break;

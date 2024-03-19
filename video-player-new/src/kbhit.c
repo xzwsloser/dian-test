@@ -43,6 +43,7 @@ void* readChar(){
     }
    
     else if(ch=='q'){
+        printf("\033[2J\033[H");
         exit(0); // 退出程序
     }
     
