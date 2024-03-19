@@ -45,5 +45,9 @@ void* fileDecord(void* arg);
 void* videoPrint(void* arg);
 // 初始化锁对象
 void mutexInit();
-
+//void initBuffer();
+void setFps(double data);
+double getFps();
+void setifStop(int data);
+double getFps();
 #endif 

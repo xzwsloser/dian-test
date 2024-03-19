@@ -3,19 +3,25 @@
 #include "../include/frameQueue.h"
 #include <string.h>
 #include <unistd.h>
-const char* standard=" -.`+=#*!^ca@";           // 总共可以定义13个字符,前面12个每一个对应20,后面一个对应10个
+const char* standard=" -.`+=@*!^ca#";           // 总共可以定义13个字符,前面12个每一个对应20,后面一个对应10个
 Buffer* buf;  // 就是定义一个缓冲区
 int flag=0;  // 记录视频帧录入状态
 pthread_mutex_t mutex;  // 锁对象
-// 定义一个固定的灰度数组
-char* charBuffer[256];
-// 初始化函数
-void initBuffer(){
-    for(int i=0;i<256;i++){
-        char buf[100];
-        sprintf(buf,"\033[38;2;%d;%d;%dm%c\033[0m",i,i,i,standard[i/20]);
-        charBuffer[i]=buf;
-    }
+// 另外一个线程锁
+double fps=1.0;  // 视频帧率
+int ifStop=0;
+// 定义一个修改ifStop的接口
+int getifStop(){
+    return ifStop;
+}
+void setifStop(int data){
+    ifStop=data;
+}
+double getFps(){
+    return fps;
+}
+void setFps(double data){
+    fps=data;
 }
 // 初始化锁对象
 void mutexInit(){
@@ -81,7 +87,18 @@ void getFrameAndPrint(char* fileName,int size,int stride,int ifColor){
 
 // level1-1 首先打印灰度图像
 void printGrayImage(Frame frame){
-   
+     if(ifStop==1){
+        char ch;
+        while(1){
+            // 阻塞等待
+            ch=getchar();
+            if(ch=='c'){
+                ifStop=0;
+                break;
+            }
+            
+        }
+    }
     int w=frame.width;
     int h=frame.height;
     int l=frame.linesize;
@@ -100,14 +117,14 @@ void printGrayImage(Frame frame){
             // 此时的打印方法就是可以利用ascii码值打印,每20个数字分为一组,每一组对饮不同的ascii码表中的字符
             unsigned int gray=(int)((red*30+green*59+blue*11)/100);
             // 如何利用gray计算区间 0 20 40 -> 0 1 2 
-            printf("\033[38;2;%u;%u;%um%c\033[0m",gray,gray,gray,standard[gray/20]);
-            
+           printf("\033[38;2;%u;%u;%um%c\033[0m",gray,gray,gray,standard[gray/20]);
+           
             
         }
-        printf("\n");
+        putchar('\n');
     }
     // 设置帧率
-        usleep(100000); // 微妙级别的 1s=1000000us
+        usleep((int)(600000/fps)); // 微妙级别的 1s=1000000us
    // system("clear");
   
    puts("\033[2J\033[H");  // 利用转义字符清屏并且把光标移动到左上角
@@ -117,6 +134,7 @@ void printGrayImage(Frame frame){
 }
 // level1-1 打印rgb图像
 void printRGBImage(Frame frame){
+  
     int w=frame.width;
     int h=frame.height;
     int l=frame.linesize;
@@ -130,6 +148,7 @@ void printRGBImage(Frame frame){
         }
         printf("\n");
     }    
+    puts("\033[2J\033[H");
 }
 // level1-2 平均池化
 // 就是取一个区间里面的平均值
@@ -297,7 +316,7 @@ void* fileDecord(void* arg){
             }
             headInsert(buf,frame);
             // 连续跳两帧
-            for(int i=0;i<2;i++){
+            for(int i=0;i<3;i++){
                 frame=decoder_get_frame();
                 if(frame.height==0&&frame.width==0){
                     break;

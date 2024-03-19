@@ -3,8 +3,10 @@
 #include<unistd.h>  
 #include<string.h>
 #include<pthread.h>
+#include "../include/kbhit.h"
 #include "../include/printImage.h"
 #include "../include/parseParameters.h"
+
 /**
  *  多线程没有成功,没有优化,没有暂停和加速
  *  -a选项播放视频
@@ -77,34 +79,34 @@ int main(int argc,char* argv[]){
     bufInit();
     // 初始化线程锁对象
     mutexInit();
- 
+    //initBuffer();
     // 开启线程
     pthread_t tid1;  // 视频解码线程
-    pthread_t tid2;
-   
+    pthread_t thread[100];
+    pthread_t tid2; // 终端读取线程
+    pthread_t tid3; // 处理线程
+   pthread_create(&tid2,NULL,kbhit,NULL);
+   pthread_create(&tid3,NULL,readChar,NULL);
     // 参数的转化
     Para* para=(Para*)malloc(sizeof(Para));
     para->fileName=fileName;
     para->size=rsize[0];
     para->stride=rsize[1];
     pthread_create(&tid1,NULL,fileDecord,para);
-   
-        pthread_create(&tid2,NULL,videoPrint,&ifColor);
+   for(int i=0;i<100;i++){
+    pthread_create(&thread[i],NULL,videoPrint,&ifColor);
+   }
     
     // 插入线程
     pthread_join(tid1,NULL);
-   
-    pthread_join(tid2,NULL);
+   for(int j=0;j<100;j++){
 
-    
-  
+    pthread_join(thread[j],NULL);
+   }
     // 参数的汇总
     // if(ifAction==1){
     //     printInRow(fileName,rsize[0],rsize[1],ifColor);
     // } else if(ifAction==0){
     //     getFrameAndPrint(fileName,rsize[0],rsize[1],ifColor);
     // }
-    
-
-    
 }

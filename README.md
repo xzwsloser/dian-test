@@ -1,4 +1,14 @@
 # Dian团队春招学习记录
+## 总结
+还没有解决的问题:
+1. 视频帧率过快,rsize之后的视频帧大小过大还是会出现闪屏现象
+2. rsize调节的范围有限
+其他的功能基本实现
+## 运行方式
+```bash
+cd output
+./player -f ../video/bad_apple.mp4 -r 2 2 
+```
 ## Level 0-1
 之前就有学习过git,系统复习了一遍git中的常见指令
 ## Level 0-2
@@ -145,11 +155,11 @@ void resizeByMax(Frame* frame,int size,int stride){
     frame->linesize=newWidth*3;
 }
 ```
-### Level 1-3
+## Level 1-3
 1. 最先开始的做法就是利用循环不断打印图片,但是这样的效果非常差
 2. 调节帧率利用usleep函数每打印一张图片之后线程休眠一段事件
 3. 利用上面的ASNI清屏
-### Level 2-1
+## Level 2-1
 1. 学习了C语言多线程的知识,学习了创建线程,插入线程,退出线程的语法
 2. 了解了多个线程操作同一个全局变量时线程安全的问题,可以利用锁把操作共享变量所在的代码块锁起来
 3. 这里利用队列这种数据结果作为缓存,因为它的先进先出的特性保证了视频帧的顺序
@@ -210,12 +220,68 @@ void* videoPrint(void* arg){
    
     pthread_join(tid2,NULL);
 ```
-### Level 2-2
-可以每个两帧取一帧进行打印
-### 总结:
- 存在的问题:
- 1. 当resize调整之后的视频帧的大小较大时还是有打印效率跟不上的问题
- 2. level3 的内容还没有实现
+## Level 2-2
+可以每隔两帧取一帧进行打印
+## Level 3-1
+1. 实现视频的暂停,可以实现windows中的kbhit函数异步监听键盘事件,另外自己写一个readChar函数不断把stdin中的字符读出来进行相应处理
+2. 利用多线程的方式,一条线程用于监听(就是kbhit函数),另外一个线程用于读取输入的字符并且进行相应的处理
+3. 通过操作全局变量实现暂停
+## Level 3-2
+实现方式和上面差不多   
+代码实现
+```c
+void* kbhit()  
+{  
+   while(1){
+        struct termios oldt, newt;  
+    int ch;  
+    int oldf;  
+    tcgetattr(STDIN_FILENO, &oldt);  
+    newt = oldt;  
+    newt.c_lflag &= ~(ICANON | ECHO);  
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);  
+    
+    /* set the nonblock */
+    fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL, 0) | O_NONBLOCK);  
+    ch = getchar();  
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);  
+    fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL, 0));  
+    if (ch != 'q')  
+    {  
+        ungetc(ch, stdin);  /* back the ch to stdin */
+       
+    } else{
+        
+        ungetc(ch, stdin);  /* back the ch to stdin */
+        break;
+    } 
+   
+   }
+   pthread_exit(NULL);
+ 
+}  
+void* readChar(){
+   while(1){
+     char ch=getchar();
+    if(ch=='d'){
+        // 加速
+        setFps(getFps()*1.2);
+    }
+    else if(ch==' '){
+        // 暂停程序
+        setifStop(1);
+    }
+   
+    else if(ch=='q'){
+        exit(0); // 退出程序
+    }
+    
+   }
+   pthread_exit(NULL);
+   
+}
+```
+
 
 
 

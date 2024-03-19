@@ -60,6 +60,8 @@
     "parseparameters.h": "c",
     "printimage.h": "c",
     "stdlib.h": "c",
-    "framequeue.h": "c"
+    "framequeue.h": "c",
+    "term.h": "c",
+    "fcntl.h": "c"
   }
 }
